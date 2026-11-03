@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="810" viewBox="0 0 1200 810">
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#14261F}.t{font-size:15px}.b{font-size:22px;font-weight:700}.p{font-size:14px;font-weight:700}.m{font-size:14px;fill:#4F6359}</style><rect width="1200" height="810" fill="#fff"/>
+<text x="60" y="48" style="font-size:30px;font-weight:700">Smart Farm Lab: sensor circuit</text>
+<text x="60" y="76" class="m">Draft for discussion. The cube cell connection still needs confirming.</text>
+<!-- rails -->
+<line x1="80" x2="1120" y1="620" y2="620" stroke="#D32F2F" stroke-width="5"/><line x1="80" x2="1120" y1="680" y2="680" stroke="#222" stroke-width="5"/>
+<text x="600" y="608" class="p">3.3 V rail (breadboard)</text><text x="80" y="704" class="p">GND rail (breadboard)</text>
+<!-- power wires -->
+<g fill="none" stroke-width="4">
+<path d="M500 520V620M120 430V620M1010 430V620" stroke="#D32F2F"/>
+<path d="M570 520V680M190 430V680M1080 430V680" stroke="#222"/>
+<path d="M260 330H440" stroke="#E08A00"/><path d="M760 330H940" stroke="#1976D2"/>
+<path d="M850 620V505l-14 7 28 14-28 14 28 14-28 14 14 7V330" stroke="#6A3FA0"/>
+</g>
+<g fill="#14261F"><circle cx="500" cy="620" r="7" fill="#D32F2F"/><circle cx="120" cy="620" r="7" fill="#D32F2F"/><circle cx="1010" cy="620" r="7" fill="#D32F2F"/><circle cx="850" cy="620" r="7" fill="#D32F2F"/><circle cx="570" cy="680" r="7"/><circle cx="190" cy="680" r="7"/><circle cx="1080" cy="680" r="7"/><circle cx="850" cy="330" r="7" fill="#1976D2"/></g>
+<text x="350" y="316" text-anchor="middle" class="t">soil signal</text><text x="805" y="316" text-anchor="middle" class="t">temp data</text>
+<text x="872" y="500" class="p">10 kΩ</text><text x="872" y="520" class="m">pull-up</text>
+<!-- soil -->
+<rect x="60" y="250" width="200" height="180" rx="8" fill="#E3EFE6" stroke="#14261F" stroke-width="2"/>
+<text x="160" y="282" text-anchor="middle" class="b">Soil moisture</text><text x="160" y="306" text-anchor="middle" class="m">capacitive sensor</text>
+<text x="252" y="335" text-anchor="end" class="p">AOUT</text><text x="120" y="420" text-anchor="middle" class="p">VCC</text><text x="190" y="420" text-anchor="middle" class="p">GND</text>
+<!-- esp32 -->
+<rect x="440" y="230" width="320" height="290" rx="8" fill="#17332B" stroke="#14261F" stroke-width="2"/>
+<g style="fill:#fff"><text x="600" y="375" text-anchor="middle" class="b" style="fill:#fff;font-size:28px">ESP32</text><text x="600" y="402" text-anchor="middle" class="m" style="fill:#CFE0D7">sends readings over Wi-Fi</text>
+<text x="452" y="335" class="p" style="fill:#fff">GPIO 34</text><text x="748" y="335" text-anchor="end" class="p" style="fill:#fff">GPIO 4</text><text x="500" y="508" text-anchor="middle" class="p" style="fill:#fff">3V3</text><text x="570" y="508" text-anchor="middle" class="p" style="fill:#fff">GND</text></g>
+<!-- dht -->
+<rect x="940" y="250" width="200" height="180" rx="8" fill="#E3EDF7" stroke="#14261F" stroke-width="2"/>
+<text x="1040" y="282" text-anchor="middle" class="b">DHT22</text><text x="1040" y="306" text-anchor="middle" class="m">temperature, humidity</text>
+<text x="948" y="335" class="p">DATA</text><text x="1010" y="420" text-anchor="middle" class="p">VCC</text><text x="1080" y="420" text-anchor="middle" class="p">GND</text>
+<!-- cube -->
+<rect x="490" y="104" width="220" height="74" rx="8" fill="#FFF6DF" stroke="#14261F" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="600" y="136" text-anchor="middle" class="b">Cube cell</text><text x="600" y="160" text-anchor="middle" class="m">role to confirm</text>
+<line x1="600" x2="600" y1="178" y2="230" stroke="#14261F" stroke-width="3" stroke-dasharray="7 6"/>
+<text x="616" y="210" class="t">power or radio link: to confirm</text>
+<text x="60" y="750" class="m">Connect pins by the names printed on your boards, because pin positions vary. Dots show joined wires; wires that cross without a dot are not joined.</text>
+<text x="60" y="774" class="m">Most 3-pin DHT22 modules already include the pull-up resistor, so you only add it for a bare 4-pin sensor.</text>
+</svg>

@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Smart Farm Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a working lab console. One header, one band of tabs, then a tool surface per role. */
+:root{
+  --bg:#EDF2EE; --surface:#FBFDFB; --sunken:#E0E8E2; --line:#C9D5CD;
+  --fg:#14261F; --muted:#4F6359;
+  --accent:#00806A; --on-accent:#FFFFFF; --soil:#A85A10;
+  --good-bg:#D4EDE2; --warn-bg:#FBE7BC; --band:#D6EBE3; --banner:#14261F; --on-banner:#E6F0EA;
+  --display:"Bricolage Grotesque","Trebuchet MS",sans-serif;
+  --body:"Atkinson Hyperlegible","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1815; --surface:#17231E; --sunken:#0B120F; --line:#2D3E36;
+  --fg:#E6F0EA; --muted:#9DB2A7;
+  --accent:#0FA07E; --on-accent:#08201A; --soil:#BD7E3B;
+  --good-bg:#17443A; --warn-bg:#55400F; --band:#1C3B32; --banner:#26453A; --on-banner:#E6F0EA;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1815; --surface:#17231E; --sunken:#0B120F; --line:#2D3E36;
+  --fg:#E6F0EA; --muted:#9DB2A7;
+  --accent:#0FA07E; --on-accent:#08201A; --soil:#BD7E3B;
+  --good-bg:#17443A; --warn-bg:#55400F; --band:#1C3B32; --banner:#26453A; --on-banner:#E6F0EA;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:400 16px/1.5 var(--body)}
+.wrap{max-width:1120px;margin-inline:auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:700;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:1.5rem}
+h2{font-size:clamp(1.6rem,4vw,2.1rem)}
+h3{font-size:1.15rem}
+p{margin:0}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.label{font:500 .72rem/1.3 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+a{color:var(--accent)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.banner{background:var(--banner);color:var(--on-banner);font-size:.88rem}
+.banner .wrap{padding-block:7px}
+header.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top-row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;justify-content:space-between;padding-block:14px}
+.brand{display:flex;gap:12px;align-items:center}
+.brand svg{flex:none}
+nav.tabs{display:flex;gap:4px;overflow-x:auto}
+nav.tabs a{padding:10px 14px;color:var(--muted);text-decoration:none;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs a:hover{color:var(--fg)}
+nav.tabs a[aria-current="page"]{color:var(--fg);font-weight:700;border-bottom-color:var(--accent)}
+nav.tabs a.meeting{margin-left:auto}
+
+main{padding-block:28px 40px}
+.view-head{display:flex;flex-direction:column;gap:6px;margin-bottom:22px;max-width:68ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);font-weight:700;padding:9px 16px;border-radius:8px;cursor:pointer}
+.btn.ghost{background:none;color:var(--fg);border-color:var(--line);font-weight:400}
+.btn.ghost:hover{border-color:var(--accent)}
+
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:.82rem;background:var(--sunken);white-space:nowrap}
+.chip.good{background:var(--good-bg)}
+.chip.warn{background:var(--warn-bg)}
+
+/* Module map */
+.track{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:6px;max-width:420px}
+.track i{height:8px;background:var(--sunken);border-radius:2px}
+.track i.done{background:var(--accent)}
+.track i.now{background:repeating-linear-gradient(135deg,var(--accent) 0 3px,var(--sunken) 3px 6px)}
+.map{display:grid;grid-template-columns:minmax(0,270px) minmax(0,1fr);gap:22px;align-items:start}
+.doc{display:flex;flex-direction:column;gap:22px;padding:clamp(18px,3vw,32px);scroll-margin-top:12px}
+.doc-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.doc h3.doc-title{font-size:clamp(1.8rem,4vw,2.4rem);margin-top:6px}
+.lead{font-size:1.12rem;max-width:62ch;margin-top:8px}
+.doc section{display:flex;flex-direction:column;gap:8px;max-width:68ch}
+.doc section.full{max-width:none}
+.doc h4{font:700 1.1rem/1.2 var(--display);margin:0}
+.doc ul{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:5px}
+.doc figure{margin:0}
+.doc figure img{display:block;width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+.doc figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+.formula{font:500 .95rem/1.5 var(--mono);background:var(--sunken);padding:10px 12px;border-radius:6px;overflow-x:auto}
+.callout{background:var(--band);padding:12px 14px;border-radius:8px;max-width:68ch}
+.pager{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between;border-top:1px solid var(--line);padding-top:16px}
+.pager .btn{margin-left:auto}
+.pager .btn.ghost{margin-left:0}
+.mod-list{display:flex;flex-direction:column;gap:6px;list-style:none;margin:0;padding:0}
+.mod-btn{width:100%;display:grid;grid-template-columns:2.6rem minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;cursor:pointer}
+.mod-btn:hover{border-color:var(--accent)}
+.mod-btn[aria-current="true"]{border-color:var(--accent);background:var(--band)}
+.mod-btn .code{font:500 .9rem var(--mono);color:var(--muted)}
+.steps{margin:0;padding-left:1.3rem;display:flex;flex-direction:column;gap:6px}
+.detail{display:flex;flex-direction:column;gap:14px}
+
+/* Farm data */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.stat{display:flex;flex-direction:column;gap:6px}
+.stat .num{font:700 2.5rem/1 var(--display);font-variant-numeric:tabular-nums}
+.stat .num small{font-size:1.1rem;font-weight:500;color:var(--muted)}
+.feed{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.charts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.chart-head{display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.chart{position:relative;touch-action:pan-y}
+.plot svg{display:block;width:100%}
+.tip{position:absolute;top:6px;pointer-events:none;background:var(--fg);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:.8rem;line-height:1.35;white-space:nowrap}
+.legend{display:flex;gap:14px;font-size:.85rem;color:var(--muted);margin-bottom:6px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{flex:none}
+details{margin-top:10px;font-size:.9rem}
+summary{cursor:pointer;color:var(--muted)}
+.table-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th{font:500 .72rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;white-space:nowrap}
+th,td{padding:9px 12px 9px 0;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+
+/* Build logs */
+.logs{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:18px;align-items:start}
+.logs.wide{grid-template-columns:minmax(0,1fr)}
+form{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:.88rem;font-weight:700}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+input[type=text],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+textarea{resize:vertical;min-height:56px}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:.92rem}
+.check input{margin-top:4px}
+.form-actions{display:flex;flex-wrap:wrap;gap:8px}
+.wall{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.logs.wide .wall{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card{display:flex;flex-direction:column;gap:8px}
+.card header{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.card dl{margin:0;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
+.card dt{font:500 .68rem var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.card dd{margin:0}
+.wall-head{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:10px}
+
+/* Plan */
+.plan-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:18px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+.flowbox{display:flex;flex-direction:column;gap:16px;margin-bottom:18px}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:30px}
+.flow-step{position:relative;display:flex;flex-direction:column;gap:4px;background:var(--band);padding:12px;border-radius:8px;font-size:.92rem}
+.flow-step:not(:last-child)::after{content:"→";position:absolute;right:-23px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:1.2rem}
+.versions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.versions .label{margin-bottom:4px}
+@media (max-width:860px){.flow,.versions{grid-template-columns:minmax(0,1fr)}.flow-step:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-27px;transform:translateX(-50%)}}
+.demo{margin:0;padding-left:1.3rem;display:flex;flex-direction:column;gap:8px}
+.need{margin:0;padding-left:1.1rem;display:flex;flex-direction:column;gap:5px}
+.foot{border-top:1px solid var(--line);padding-block:14px;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:center;font-size:.88rem;color:var(--muted)}
+.linkish{background:none;border:0;padding:0;text-decoration:underline;cursor:pointer;color:var(--fg)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:8px;max-width:min(90vw,520px);z-index:20}
+
+@media (max-width:860px){
+  .map,.logs,.charts,.plan-grid{grid-template-columns:minmax(0,1fr)}
+  .logs.wide .wall{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:560px){
+  .wall,.logs.wide .wall{grid-template-columns:minmax(0,1fr)}
+  .stat .num{font-size:1.9rem}
+  .stats{gap:8px}
+  .stats .panel{padding:12px}
+  nav.tabs a.meeting{margin-left:0}
+}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="brand">
+        <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="7" fill="var(--accent)"/><path d="M17 27V14M17 18c-5 0-8-3-8-8 5 0 8 3 8 8Zm0 3c0-4 3-7 8-7 0 4-3 7-8 7Z" fill="none" stroke="var(--on-accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+        <div><h1>Smart Farm Lab</h1><div class="muted" style="font-size:.88rem">Learn by running a real, sensor-connected farm</div></div>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Main"></nav>
+  </div>
+</header>
+
+<main class="wrap" id="main"></main>
+
+<div class="wrap"><footer class="foot">
+  <span id="foot-note"></span>
+  <button class="linkish" id="reset" type="button">Reset demo</button>
+</footer></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const MODULES=[
+ {c:'M1',t:'Sensing',o:'Wire and calibrate a soil moisture sensor, then trust its readings.',circuit:true,
+  n:['ESP32 board and USB data cable','Capacitive soil moisture sensor','DHT22 temperature and humidity sensor','Breadboard and jumper wires','A cup of dry soil and a cup of wet soil'],
+  s:['Connect the sensors using the circuit and wiring table','Upload a test sketch and watch the readings in the serial monitor','Record the raw reading in dry soil, then in wet soil','Turn raw readings into a percentage with the calibration formula','Submit your checkpoint as a build log'],
+  k:'Dry and wet calibration values, plus a build log that says what failed.'},
+ {c:'M2',t:'Connectivity',o:'Send readings from the ESP32 to an online channel every 30 seconds.',
+  n:['Your working M1 circuit','Wi-Fi access','A free ThingSpeak account'],
+  s:['Create a channel with fields for moisture, temperature and humidity','Connect the ESP32 to Wi-Fi','Post one reading set every 30 seconds','Open the channel in a browser and watch the numbers change'],
+  k:'A channel link showing your live readings.'},
+ {c:'M3',t:'Data and dashboards',o:'Chart your readings and explain what they show.',
+  n:['A channel with at least a day of readings'],
+  s:['Add a chart for each reading','Mark the moisture range your crop needs','Find one pattern and work out what caused it'],
+  k:'A chart with a short explanation of the pattern you found.'},
+ {c:'M4',t:'Irrigation control',o:'Switch a pump or valve safely from the ESP32.',
+  n:['Relay module','Small pump or valve','A separate power supply for the pump'],
+  s:['Power the pump separately from the ESP32','Switch the pump on and off from a test sketch','Add a time limit so it can never run forever'],
+  k:'A pump that runs on command and stops by itself.'},
+ {c:'M5',t:'Automation',o:'Water automatically when moisture crosses a threshold.',
+  n:['Your M1 sensor and M4 pump, working together'],
+  s:['Choose the moisture level that starts watering','Wait for the water to soak in before reading again','Record every watering in your channel'],
+  k:'One day of automatic watering, with the readings to prove it.'},
+ {c:'M6',t:'Water efficiency',o:'Compare water used against a baseline and report the difference.',
+  n:['A way to measure water, such as a marked container','Your watering records'],
+  s:['Measure how much water a normal routine uses','Measure how much the automatic system uses','Compare the two over the same number of days'],
+  k:'A water used vs. baseline chart with your conclusion.'},
+ {c:'M7',t:'Field deployment',o:'Power and weatherproof a node so it survives outdoors.',
+  n:['Weatherproof enclosure','A power source for outdoor use'],
+  s:['Move the circuit from breadboard into the enclosure','Protect the cables and connections','Leave it outside and check that readings keep arriving'],
+  k:'A node that keeps reporting outdoors for a full week.'},
+ {c:'M8',t:'Showcase',o:'Present your farm, data and results to visitors.',
+  n:['Your build logs, charts and working farm'],
+  s:['Choose your strongest result','Prepare a live demo of the farm','Explain what failed and what you changed'],
+  k:'A short live demo for visitors.'}];
+const ROLES={Student:['modules','farm','logs','plan']};
+const TABS={modules:'Modules',farm:'Farm data',logs:'Build logs',plan:"How I'll build it"};
+const NOTES={Student:'Read the modules, see the farm data and share build logs.'};
+const WIRING=[['Soil sensor AOUT','ESP32 GPIO 34'],['Soil sensor VCC','3.3 V rail'],['Soil sensor GND','GND rail'],['DHT22 DATA','ESP32 GPIO 4'],['DHT22 VCC','3.3 V rail'],['DHT22 GND','GND rail'],['ESP32 3V3','3.3 V rail'],['ESP32 GND','GND rail']];
+const DRY=3100,WET=1300,LOW=35,HIGH=60,BASE=6;
+const $=(q,r=document)=>r.querySelector(q);
+const esc=s=>String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmtDay=d=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+const daysAgo=n=>{const d=new Date();d.setDate(d.getDate()-n);return d};
+
+let S;
+function fresh(){
+  const hist=Array.from({length:40},(_,i)=>+(49-i*.25+Math.sin(i/3)*.8).toFixed(1));
+  return {role:'Student',mod:0,hist,temp:24.3,hum:58,
+   used:[4.8,4.2,5.1,3.9,4.4,4.6,3.7,4.3,4.9,4.1,3.8,4.5,4.2,3.6],
+   teams:[{n:'Team Sorghum',m:'Lerato, Sipho, Ayesha',done:0},{n:'Team Maize',m:'Pieter, Nomsa, Kagiso, Zanele',done:1},{n:'Team Bean',m:'Thabo, Fatima, Liam',done:0}],
+   logs:[
+    {name:'Sipho',team:'Team Sorghum',mod:'M1',did:'Wired the moisture sensor to the ESP32 on a breadboard.',fail:'Readings jumped around because a jumper wire was loose.',learn:'Check the wiring before blaming the code.',next:'Calibrate in dry soil.',date:daysAgo(1),cp:false},
+    {name:'Nomsa',team:'Team Maize',mod:'M2',did:'Got the ESP32 onto Wi-Fi and posting to a test channel.',fail:'The first posts were rejected because we sent them too often.',learn:'Free channels limit how fast you can post.',next:'Add temperature as a second field.',date:daysAgo(2),cp:false},
+    {name:'Ayesha',team:'Team Sorghum',mod:'M1',did:'Read the M1 guide and listed the parts we had.',fail:'We could not find the wiring diagram at first.',learn:'Pin numbers differ between ESP32 boards.',next:'Wire the sensor.',date:daysAgo(4),cp:false},
+    {name:'Pieter',team:'Team Maize',mod:'M1',did:'Calibrated in dry and wet soil and recorded both values.',fail:'Wet reading drifted until the soil settled.',learn:'Wait a few minutes before taking a reading.',next:'Start M2.',date:daysAgo(6),cp:true},
+    {name:'Thabo',team:'Team Bean',mod:'M1',did:'Unpacked the kit and tested the ESP32 with a blink sketch.',fail:'The USB cable only carried power, not data.',learn:'Keep one known-good cable in the kit.',next:'Wire the DHT22.',date:daysAgo(9),cp:false}]};
+}
+const EXAMPLE={did:'Calibrated the sensor: 3100 in dry soil and 1300 in wet soil.',fail:'Our first dry reading was taken from damp soil, so we redid it.',learn:'Calibration values change the percentage a lot.',next:'Start M2 and send readings online.'};
+
+function moduleStatus(team,i){return i<team.done?'Complete':i===team.done?'In progress':'Locked'}
+function statusChip(s){const m={Complete:['good','✓'],'In progress':['warn','●'],Locked:['','–']}[s];return `<span class="chip ${m[0]}"><span aria-hidden="true">${m[1]}</span>${s}</span>`}
+function moistureState(v){return v<LOW?['warn','▼ Too dry']:v>HIGH?['warn','▲ Too wet']:['good','✓ In range']}
+
+/* ---------- views ---------- */
+function viewModules(){
+  const t=S.teams[0],mod=MODULES[S.mod],st=moduleStatus(t,S.mod),draft=S.mod>0;
+  const track=MODULES.map((_,i)=>`<i class="${i<t.done?'done':i===t.done?'now':''}"></i>`).join('');
+  const glyph={Complete:'✓','In progress':'●',Locked:'–'};
+  const prev=MODULES[S.mod-1],next=MODULES[S.mod+1];
+  return `<div class="view-head"><h2>Modules</h2>
+    <p class="muted">The full guide to building the farm, one module at a time. ${esc(t.n)} has completed ${t.done} of 8.</p><div class="track" aria-hidden="true">${track}</div></div>
+  <div class="map">
+    <ul class="mod-list">${MODULES.map((m,i)=>{const s=moduleStatus(t,i);return `<li><button type="button" class="mod-btn" data-mod="${i}" aria-current="${i===S.mod}">
+      <span class="code">${m.c}</span><span>${esc(m.t)}</span><span aria-label="${s}" title="${s}">${glyph[s]}</span></button></li>`}).join('')}</ul>
+    <article class="panel doc">
+      <header>
+        <div class="doc-meta"><span class="label">Module ${S.mod+1} of 8${draft?' · draft':''}</span>${statusChip(st)}</div>
+        <h3 class="doc-title">${esc(mod.t)}</h3>
+        <p class="lead">${esc(mod.o)}</p>
+      </header>
+      ${st==='Locked'?`<p class="callout">You can read this module now. Its checkpoint opens after ${prev.c}.</p>`:''}
+      <section><h4>What you need</h4><ul>${mod.n.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></section>
+      ${mod.circuit?`<section class="full"><h4>The circuit</h4><figure><img src="circuit.svg" alt="Circuit diagram. The soil sensor connects to ESP32 GPIO 34 and the DHT22 to GPIO 4. Both sensors share the 3.3 volt and ground breadboard rails with the ESP32. A cube cell is shown as a dashed box because its connection is not confirmed."><figcaption>Draft circuit. The cube cell connection still needs confirming.</figcaption></figure></section>
+      <section><h4>Wiring table</h4><div class="table-wrap"><table><thead><tr><th>From</th><th>To</th></tr></thead><tbody>${WIRING.map(w=>`<tr><td>${w[0]}</td><td class="mono">${w[1]}</td></tr>`).join('')}</tbody></table></div></section>`:''}
+      <section><h4>What you do</h4><ol class="steps">${mod.s.map(x=>`<li>${esc(x)}</li>`).join('')}</ol></section>
+      ${mod.circuit?`<section><h4>Calibration formula</h4><div class="formula">moisture % = (dry - reading) / (dry - wet) × 100</div><p class="muted">Use your own dry and wet readings, because every sensor is slightly different.</p></section>`:''}
+      <section><h4>Checkpoint</h4><p>${esc(mod.k)}</p>
+      ${st==='In progress'&&S.role==='Student'?`<div><a class="btn" style="display:inline-block;text-decoration:none" href="#logs">Submit checkpoint</a></div>`:''}</section>
+      <div class="pager">${prev?`<button type="button" class="btn ghost" data-mod="${S.mod-1}">Previous: ${esc(prev.t)}</button>`:''}${next?`<button type="button" class="btn" data-mod="${S.mod+1}">Next: ${esc(next.t)}</button>`:''}</div>
+    </article>
+  </div>`;
+}
+function viewFarm(){
+  const v=S.hist[S.hist.length-1];
+  const totalU=S.used.reduce((a,b)=>a+b,0),totalB=BASE*S.used.length,sv=totalB-totalU;
+  return `<div class="view-head"><h2>Farm data</h2><p class="muted">Bed A, one ESP32 with a capacitive soil moisture sensor and a DHT22.</p></div>
+  <div class="feed">
+    <span class="muted" style="font-size:.9rem;min-width:0">Simulated feed. New reading every 3 seconds here, every 30 on the real sensor.</span>
+    <button class="btn" id="water" type="button">Water the bed</button>
+  </div>
+  <div class="stats">
+    <div class="panel stat"><span class="label">Soil moisture</span><span class="num"><span id="s-m">${v.toFixed(0)}</span><small>%</small></span><span id="s-state">${stateChip(v)}</span><span class="mono muted" style="font-size:.8rem">raw ADC <span id="s-raw">${rawOf(v)}</span></span></div>
+    <div class="panel stat"><span class="label">Air temperature</span><span class="num"><span id="s-t">${S.temp.toFixed(1)}</span><small>°C</small></span><span class="mono muted" style="font-size:.8rem">DHT22</span></div>
+    <div class="panel stat"><span class="label">Humidity</span><span class="num"><span id="s-h">${S.hum.toFixed(0)}</span><small>%</small></span><span class="mono muted" style="font-size:.8rem">DHT22</span></div>
+  </div>
+  <div class="charts">
+    <section class="panel">
+      <div class="chart-head"><h3>Soil moisture, last 20 minutes</h3><span class="muted" style="font-size:.85rem">Shaded band is the target, ${LOW} to ${HIGH}%</span></div>
+      <div class="chart" id="c-moist"><div class="plot"></div><div class="tip" hidden></div></div>
+    </section>
+    <section class="panel">
+      <div class="chart-head"><h3>Water used vs. baseline</h3><span class="muted" style="font-size:.85rem"><span id="saved">${sv.toFixed(1)}</span> L saved over 14 days</span></div>
+      <div class="legend" aria-hidden="true">
+        <span><svg width="22" height="6"><line x1="1" x2="21" y1="3" y2="3" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/></svg>Used</span>
+        <span><svg width="22" height="6"><line x1="1" x2="21" y1="3" y2="3" stroke="var(--soil)" stroke-width="2.5" stroke-dasharray="5 4"/></svg>Baseline</span>
+      </div>
+      <div class="chart" id="c-water"><div class="plot"></div><div class="tip" hidden></div></div>
+      <details><summary>Show as a table</summary><div class="table-wrap"><table><thead><tr><th>Date</th><th>Used (L)</th><th>Baseline (L)</th></tr></thead><tbody id="w-table">${waterRows()}</tbody></table></div></details>
+    </section>
+  </div>`;
+}
+const rawOf=v=>Math.round(DRY-(v/100)*(DRY-WET));
+function stateChip(v){const s=moistureState(v);return `<span class="chip ${s[0]}">${s[1]}</span>`}
+function waterRows(){return S.used.map((u,i)=>`<tr><td>${fmtDay(daysAgo(13-i))}</td><td class="mono">${u.toFixed(1)}</td><td class="mono">${BASE.toFixed(1)}</td></tr>`).join('')}
+
+function logCard(l){return `<article class="panel card">
+  <header><div><strong>${esc(l.name)}</strong><div class="muted" style="font-size:.85rem">${esc(l.team)} · ${esc(l.mod)} · ${fmtDay(l.date)}</div></div>${l.cp?statusChip('Complete').replace('Complete','Checkpoint'):''}</header>
+  <dl><div><dt>What I did</dt><dd>${esc(l.did)}</dd></div><div><dt>What failed</dt><dd>${esc(l.fail)}</dd></div><div><dt>What I learned</dt><dd>${esc(l.learn)}</dd></div><div><dt>What's next</dt><dd>${esc(l.next)}</dd></div></dl>
+</article>`}
+function viewLogs(){
+  const stu=S.role==='Student',t=S.teams[0];
+  const form=stu?`<section class="panel"><h3 style="margin-bottom:12px">Add a build log</h3>
+   <form id="log-form">
+    <div class="two">
+      <div class="field"><label for="f-name">Your name</label><input id="f-name" type="text" required value="Lerato"></div>
+      <div class="field"><label for="f-team">Team</label><select id="f-team">${S.teams.map(x=>`<option>${esc(x.n)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label for="f-mod">Module</label><select id="f-mod">${MODULES.map((m,i)=>`<option value="${m.c}"${i===t.done?' selected':''}>${m.c} ${esc(m.t)}</option>`).join('')}</select></div>
+    ${[['did','What I did'],['fail','What failed'],['learn','What I learned'],['next',"What's next"]].map(([k,l])=>`<div class="field"><label for="f-${k}">${l}</label><textarea id="f-${k}" required>${esc(EXAMPLE[k])}</textarea></div>`).join('')}
+    <label class="check"><input id="f-cp" type="checkbox" checked><span>This is my module checkpoint</span></label>
+    <div class="form-actions"><button class="btn" type="submit">Submit build log</button><button class="btn ghost" type="button" id="f-ex">Refill example</button></div>
+   </form></section>`:'';
+  return `<div class="view-head"><h2>Build logs</h2><p class="muted">Every team shares what they did, what failed and what they learned. These entries are samples.</p></div>
+  <div class="logs ${stu?'':'wide'}">${form}
+   <section><div class="wall-head"><span class="label"><span id="log-count">${S.logs.length}</span> logs, newest first</span></div>
+   <div class="wall" id="wall">${S.logs.map(logCard).join('')}</div></section>
+  </div>`;
+}
+function viewPlan(){
+  const P=[['0','ESP32 posting to ThingSpeak','Week 1','Live data URL'],['1','Notion, Airtable and embeds','Week 2','Public MVP URL'],['2','Run M1 with one team','Weeks 3 to 5','Checkpoint and friction notes'],['3','Fix what got in the way','Week 6','Updated MVP'],['4','Write the requirements','Week 7','One-page spec'],['5','Student team builds the custom site','Semester 2','Custom OS']];
+  return `<div class="view-head"><h2>How I'll build it</h2><p class="muted">This page shows the look and flow I'm aiming for. I'll start with free tools and one team, then students build the custom site.</p></div>
+  <section class="panel flowbox"><h3>How it works</h3>
+   <div class="flow">
+    <div class="flow-step"><strong>Sensors</strong><span class="muted">Measure soil moisture, temperature and humidity</span></div>
+    <div class="flow-step"><strong>ESP32</strong><span class="muted">Reads the sensors and sends the data over Wi-Fi</span></div>
+    <div class="flow-step"><strong>ThingSpeak</strong><span class="muted">Stores the readings every 30 seconds</span></div>
+    <div class="flow-step"><strong>Website</strong><span class="muted">Shows the modules, farm data and build logs</span></div>
+   </div>
+   <div class="versions"><div><div class="label">First version, free tools</div><p>Notion for the modules, Airtable for build logs and ThingSpeak for the charts.</p></div><div><div class="label">Custom version, Semester 2</div><p>Students build the full site with Next.js, Supabase and Vercel, or the tools they know.</p></div></div>
+  </section>
+  <div class="plan-grid">
+   <section class="panel"><div class="table-wrap"><table><thead><tr><th>Phase</th><th>What</th><th>When</th><th>Deliverable</th></tr></thead><tbody>
+    ${P.map(p=>`<tr><td class="mono">${p[0]}</td><td>${p[1]}</td><td style="white-space:nowrap">${p[2]}</td><td>${p[3]}</td></tr>`).join('')}</tbody></table></div></section>
+   <div class="stack">
+    <section class="panel"><h3 style="margin-bottom:10px">Two-minute demo</h3><ol class="demo">
+      <li><a href="#modules">Modules</a>: open M1 and scroll through the guide and circuit.</li>
+      <li><a href="#farm">Farm data</a>: press Water the bed and watch the chart respond.</li>
+      <li><a href="#logs">Build logs</a>: submit the example and M1 completes.</li>
+            </ol></section>
+    <section class="panel"><h3 style="margin-bottom:10px">What we need to start</h3><ul class="need">
+      <li>1 ESP32, 1 capacitive soil moisture sensor, 1 DHT22, a breadboard and jumper wires</li>
+      <li>1 team of 3 to 4 students for the M1 trial</li>
+      <li>2 to 3 students who can code in Semester 2</li></ul></section>
+   </div>
+  </div>`;
+}
+
+/* ---------- charts ---------- */
+function drawChart(el){
+  const c=el&&el._cfg; if(!c)return;
+  const W=el.clientWidth; if(!W)return;
+  const H=230,m={t:12,r:62,b:26,l:32},n=c.series[0].values.length;
+  const x=i=>m.l+i*(W-m.l-m.r)/(n-1),y=v=>m.t+(c.max-v)*(H-m.t-m.b)/(c.max-c.min);
+  let g='';
+  if(c.band)g+=`<rect x="${m.l}" y="${y(c.band[1])}" width="${W-m.l-m.r}" height="${y(c.band[0])-y(c.band[1])}" fill="var(--band)"/>`;
+  c.ticks.forEach(t=>{g+=`<line x1="${m.l}" x2="${W-m.r}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="1"/><text x="${m.l-6}" y="${y(t)+4}" text-anchor="end" fill="var(--muted)" font-size="11" font-family="var(--mono)">${t}</text>`});
+  c.xTicks.forEach(([i,l])=>{const a=i===0?'start':i===n-1?'end':'middle';g+=`<text x="${x(i)}" y="${H-7}" text-anchor="${a}" fill="var(--muted)" font-size="11" font-family="var(--mono)">${l}</text>`});
+  c.series.forEach(s=>{
+    const pts=s.values.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    if(s.area)g+=`<polygon points="${m.l},${y(c.min)} ${pts} ${x(n-1)},${y(c.min)}" fill="${s.color}" opacity=".1"/>`;
+    g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"${s.dash?' stroke-dasharray="6 5"':''}/>`;
+  });
+  const ends=c.series.map(s=>({s,v:s.values[n-1],ly:y(s.values[n-1])+4})).sort((a,b)=>a.ly-b.ly);
+  for(let i=1;i<ends.length;i++)if(ends[i].ly-ends[i-1].ly<15)ends[i].ly=ends[i-1].ly+15;
+  ends.forEach(e=>{g+=`<circle cx="${x(n-1)}" cy="${y(e.v)}" r="4.5" fill="${e.s.color}" stroke="var(--surface)" stroke-width="2"/><text x="${x(n-1)+10}" y="${e.ly}" fill="var(--fg)" font-size="12" font-family="var(--mono)">${c.fmt(e.v)}</text>`});
+  const h=el._hover;
+  if(h!=null){
+    g+=`<line x1="${x(h)}" x2="${x(h)}" y1="${m.t}" y2="${H-m.b}" stroke="var(--muted)" stroke-width="1"/>`;
+    c.series.forEach(s=>{g+=`<circle cx="${x(h)}" cy="${y(s.values[h])}" r="4.5" fill="${s.color}" stroke="var(--surface)" stroke-width="2"/>`});
+  }
+  $('.plot',el).innerHTML=`<svg viewBox="0 0 ${W} ${H}" height="${H}" role="img" aria-label="${esc(c.label)}">${g}</svg>`;
+  el._geom={m,W,n};
+  const tip=$('.tip',el);
+  if(h!=null){tip.hidden=false;tip.innerHTML=c.tip(h);const tw=tip.offsetWidth,px=x(h);tip.style.left=Math.min(W-tw,Math.max(0,px>W/2?px-tw-10:px+10))+'px'}
+  else tip.hidden=true;
+}
+function wireChart(el){
+  el.addEventListener('pointermove',e=>{const g=el._geom;if(!g)return;const r=el.getBoundingClientRect(),i=Math.round((e.clientX-r.left-g.m.l)/((g.W-g.m.l-g.m.r)/(g.n-1)));el._hover=Math.max(0,Math.min(g.n-1,i));drawChart(el)});
+  el.addEventListener('pointerleave',()=>{el._hover=null;drawChart(el)});
+}
+function cumulative(a){let t=0;return a.map(v=>+(t+=v).toFixed(1))}
+function drawFarm(){
+  const a=$('#c-moist'),b=$('#c-water'); if(!a||!b)return;
+  if(!a._wired){wireChart(a);wireChart(b);a._wired=b._wired=true}
+  const n=S.hist.length;
+  a._cfg={label:'Soil moisture percentage over the last 20 minutes',series:[{values:S.hist,color:'var(--accent)',area:true}],min:20,max:80,ticks:[20,40,60,80],band:[LOW,HIGH],
+    xTicks:[[0,'20 min ago'],[20,'10 min'],[n-1,'now']],fmt:v=>v.toFixed(0)+'%',
+    tip:i=>{const ago=(n-1-i)*30;return `<strong>${S.hist[i].toFixed(1)}%</strong> · ${ago?(ago>=60?Math.round(ago/60)+' min ago':ago+' sec ago'):'now'}`}};
+  const u=cumulative(S.used),base=S.used.map((_,i)=>BASE*(i+1)),top=Math.max(100,Math.ceil(Math.max(...u,...base)/25)*25);
+  const ticks=[];for(let t=0;t<=top;t+=25)ticks.push(t);
+  b._cfg={label:'Cumulative water used compared with baseline over 14 days',series:[{values:base,color:'var(--soil)',dash:true},{values:u,color:'var(--accent)'}],min:0,max:top,ticks,
+    xTicks:[[0,fmtDay(daysAgo(13))],[13,'today']],fmt:v=>v.toFixed(0)+' L',
+    tip:i=>`<strong>${fmtDay(daysAgo(13-i))}</strong><br>Used ${u[i].toFixed(1)} L · Baseline ${base[i]} L`};
+  drawChart(a);drawChart(b);
+}
+function updateFarm(){
+  const v=S.hist[S.hist.length-1],set=(id,t)=>{const e=$(id);if(e)e.textContent=t};
+  set('#s-m',v.toFixed(0));set('#s-raw',rawOf(v));set('#s-t',S.temp.toFixed(1));set('#s-h',S.hum.toFixed(0));
+  const st=$('#s-state');if(st)st.innerHTML=stateChip(v);
+  drawFarm();
+}
+
+/* ---------- shell ---------- */
+function currentView(){
+  const h=location.hash.slice(1),allowed=ROLES[S.role];
+  return allowed.includes(h)?h:allowed[0];
+}
+function render(){
+  const view=currentView();
+  $('#tabs').innerHTML=ROLES[S.role].map(t=>`<a href="#${t}"${t===view?' aria-current="page"':''}${t==='plan'?' class="meeting"':''}>${TABS[t]}</a>`).join('');
+  $('#foot-note').textContent=NOTES[S.role];
+  $('#main').innerHTML={modules:viewModules,farm:viewFarm,logs:viewLogs,plan:viewPlan}[view]();
+  if(view==='farm')drawFarm();
+}
+let toastT;
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3500)}
+
+document.addEventListener('click',e=>{
+  const m=e.target.closest('[data-mod]'); if(m){S.mod=+m.dataset.mod;render();const d=$('.doc');if(d&&(innerWidth<=860||d.getBoundingClientRect().top<0))d.scrollIntoView();return}
+  if(e.target.id==='water'){
+    const h=S.hist;h[h.length-1]=Math.min(78,h[h.length-1]+14);
+    S.used[S.used.length-1]=+(S.used[S.used.length-1]+1.5).toFixed(1);
+    const tot=BASE*S.used.length-S.used.reduce((a,b)=>a+b,0);
+    $('#saved').textContent=tot.toFixed(1);$('#w-table').innerHTML=waterRows();
+    updateFarm();toast('Watered Bed A with 1.5 L.');return}
+  if(e.target.id==='f-ex'){Object.keys(EXAMPLE).forEach(k=>$('#f-'+k).value=EXAMPLE[k]);return}
+  if(e.target.id==='reset'){const r=S.role;S=fresh();S.role=r;render();toast('Demo reset to the sample data.')}
+});
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='log-form')return;
+  e.preventDefault();
+  const g=k=>$('#f-'+k).value.trim();
+  const team=S.teams.find(t=>t.n===g('team')),mi=MODULES.findIndex(m=>m.c===g('mod'));
+  const cp=$('#f-cp').checked&&mi===team.done;
+  S.logs.unshift({name:g('name'),team:team.n,mod:g('mod'),did:g('did'),fail:g('fail'),learn:g('learn'),next:g('next'),date:new Date(),cp});
+  let msg='Build log added to the wall.';
+  if(cp&&team.done<8){team.done++;msg=`${MODULES[mi].c} checkpoint complete for ${team.n}.`+(team.done<8?` ${MODULES[team.done].c} is now open.`:'')}
+  render();toast(msg);
+});
+window.addEventListener('hashchange',render);
+new ResizeObserver(()=>{drawChart($('#c-moist'));drawChart($('#c-water'))}).observe(document.body);
+
+function tick(){
+  const h=S.hist,last=h[h.length-1];
+  h.push(+Math.max(21,last-.2+(Math.random()-.5)*.6).toFixed(1));h.shift();
+  S.temp=+(S.temp+(Math.random()-.5)*.2).toFixed(1);
+  S.hum=+Math.min(90,Math.max(30,S.hum+(Math.random()-.5)*.6)).toFixed(1);
+  if(currentView()==='farm')updateFarm();
+}
+S=fresh();render();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{if(currentView()==='farm')drawFarm()});
+setInterval(tick,3000);
+</script>
+
+</body>
+</html>
